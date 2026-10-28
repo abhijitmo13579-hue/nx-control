@@ -99,3 +99,7 @@ Their license notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 ## License
 
 [MIT](LICENSE)
+
+## Releasing (for maintainers)
+
+Releases are built by GitHub Actions from source. To ship a new version, update `VERSION` and `RELEASE_NOTES.md`, then push to `main`. The workflow builds `NXControl.exe`, creates the tag, and publishes the release with the exe attached.

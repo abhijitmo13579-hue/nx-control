@@ -1,0 +1,42 @@
+name: Build and release
+
+# Builds NXControl.exe from source and publishes a GitHub Release.
+# To ship a new version: change VERSION and RELEASE_NOTES.md, then push to main.
+
+on:
+  push:
+    branches: [main]
+    paths: [VERSION]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MinGW-w64
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq gcc-mingw-w64-x86-64
+
+      - name: Build NXControl.exe
+        run: ./build.sh
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="v$(tr -d '[:space:]' < VERSION)"
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists, nothing to do."
+            exit 0
+          fi
+          SHA=$(sha256sum NXControl.exe | cut -d' ' -f1)
+          cp RELEASE_NOTES.md notes.md
+          printf '\nSHA-256 of NXControl.exe: `%s`\n' "$SHA" >> notes.md
+          gh release create "$VERSION" NXControl.exe \
+            --target "$GITHUB_SHA" \
+            --title "NX Control $VERSION" \
+            --notes-file notes.md
